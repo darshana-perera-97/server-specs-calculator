@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Specs Calculator - Analytics Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .refresh-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .refresh-btn i {
+            margin-right: 8px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .metric-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #28a745;
+        }
+
+        .status-offline {
+            background: #dc3545;
+        }
+
+        .network-interface {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .interface-name {
+            font-weight: 600;
+            color: #17a2b8;
+            margin-bottom: 8px;
+        }
+
+        .interface-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #f5c6cb;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-server"></i> Server Specs Calculator</h1>
+            <p>Real-time Analytics Dashboard</p>
+            <button class="refresh-btn" onclick="refreshData()">
+                <i class="fas fa-sync-alt"></i> Refresh Data
+            </button>
+        </div>
+
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner"></i>
+            <p>Loading server metrics...</p>
+        </div>
+
+        <div id="dashboard" class="dashboard" style="display: none;">
+            <!-- System Performance Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <div class="card-title">System Performance</div>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="metric-value" id="cpuCount">-</div>
+                        <div class="metric-label">CPU Cores</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="loadAverage">-</div>
+                        <div class="metric-label">Load Average</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="systemCpuUsage">-</div>
+                        <div class="metric-label">System CPU</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="systemCpuBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="processCpuUsage">-</div>
+                        <div class="metric-label">Process CPU</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="processCpuBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memory Usage Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                        <i class="fas fa-memory"></i>
+                    </div>
+                    <div class="card-title">Memory Usage</div>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="metric-value" id="totalMemMB">-</div>
+                        <div class="metric-label">Total Memory</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="usedMemMB">-</div>
+                        <div class="metric-label">Used Memory</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="freeMemMB">-</div>
+                        <div class="metric-label">Free Memory</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="memUsagePercent">-</div>
+                        <div class="metric-label">Memory Usage</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="memBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disk Storage Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #fd7e14, #ffc107);">
+                        <i class="fas fa-hdd"></i>
+                    </div>
+                    <div class="card-title">Disk Storage</div>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="metric-value" id="totalDiskMB">-</div>
+                        <div class="metric-label">Total Disk</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="usedDiskMB">-</div>
+                        <div class="metric-label">Used Disk</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="freeDiskMB">-</div>
+                        <div class="metric-label">Free Disk</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="diskUsagePercent">-</div>
+                        <div class="metric-label">Disk Usage</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="diskBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Uptime & Process Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #17a2b8, #6f42c1);">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="card-title">Uptime & Process</div>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="metric-value" id="systemUptime">-</div>
+                        <div class="metric-label">System Uptime</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="processUptime">-</div>
+                        <div class="metric-label">Process Uptime</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="nodeVersion">-</div>
+                        <div class="metric-label">Node.js Version</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="pid">-</div>
+                        <div class="metric-label">Process ID</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Memory Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #e83e8c, #fd7e14);">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <div class="card-title">Process Memory</div>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="metric-value" id="rss">-</div>
+                        <div class="metric-label">RSS</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="heapTotal">-</div>
+                        <div class="metric-label">Heap Total</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="heapUsed">-</div>
+                        <div class="metric-label">Heap Used</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="external">-</div>
+                        <div class="metric-label">External</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network & Bandwidth Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: linear-gradient(135deg, #6f42c1, #e83e8c);">
+                        <i class="fas fa-network-wired"></i>
+                    </div>
+                    <div class="card-title">Network & Bandwidth</div>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="metric-value" id="totalRx">-</div>
+                        <div class="metric-label">Total RX</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value" id="totalTx">-</div>
+                        <div class="metric-label">Total TX</div>
+                    </div>
+                </div>
+                <div id="networkInterfaces"></div>
+            </div>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div class="timestamp" id="timestamp"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3100';
+        let refreshInterval;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            // Auto-refresh every 30 seconds
+            refreshInterval = setInterval(loadData, 30000);
+        });
+
+        async function loadData() {
+            try {
+                showLoading(true);
+                hideError();
+
+                const response = await fetch(`${API_BASE}/api/metrics`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    updateDashboard(data.data);
+                    updateTimestamp();
+                } else {
+                    throw new Error(data.error || 'Failed to load data');
+                }
+            } catch (error) {
+                showError(`Error loading data: ${error.message}`);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function updateDashboard(metrics) {
+            // System Performance
+            document.getElementById('cpuCount').textContent = metrics.cpuCount;
+            document.getElementById('loadAverage').textContent = metrics.loadAverage;
+            document.getElementById('systemCpuUsage').textContent = metrics.systemCpuUsage;
+            document.getElementById('processCpuUsage').textContent = metrics.processCpuUsage;
+            
+            // Update progress bars
+            updateProgressBar('systemCpuBar', parseFloat(metrics.systemCpuUsage));
+            updateProgressBar('processCpuBar', parseFloat(metrics.processCpuUsage));
+
+            // Memory Usage
+            document.getElementById('totalMemMB').textContent = metrics.totalMemMB;
+            document.getElementById('usedMemMB').textContent = metrics.usedMemMB;
+            document.getElementById('freeMemMB').textContent = metrics.freeMemMB;
+            document.getElementById('memUsagePercent').textContent = metrics.memUsagePercent;
+            updateProgressBar('memBar', parseFloat(metrics.memUsagePercent));
+
+            // Disk Storage
+            document.getElementById('totalDiskMB').textContent = metrics.totalDiskMB;
+            document.getElementById('usedDiskMB').textContent = metrics.usedDiskMB;
+            document.getElementById('freeDiskMB').textContent = metrics.freeDiskMB;
+            document.getElementById('diskUsagePercent').textContent = metrics.diskUsagePercent;
+            updateProgressBar('diskBar', parseFloat(metrics.diskUsagePercent));
+
+            // Uptime & Process
+            document.getElementById('systemUptime').textContent = metrics.systemUptime;
+            document.getElementById('processUptime').textContent = metrics.processUptime;
+            document.getElementById('nodeVersion').textContent = metrics.nodeVersion;
+            document.getElementById('pid').textContent = metrics.pid;
+
+            // Process Memory
+            document.getElementById('rss').textContent = metrics.processMemory.rss;
+            document.getElementById('heapTotal').textContent = metrics.processMemory.heapTotal;
+            document.getElementById('heapUsed').textContent = metrics.processMemory.heapUsed;
+            document.getElementById('external').textContent = metrics.processMemory.external;
+
+            // Network & Bandwidth
+            document.getElementById('totalRx').textContent = metrics.bandwidthUsage.totalRx;
+            document.getElementById('totalTx').textContent = metrics.bandwidthUsage.totalTx;
+
+            // Network Interfaces
+            updateNetworkInterfaces(metrics.networkInterfaces);
+        }
+
+        function updateProgressBar(elementId, percentage) {
+            const element = document.getElementById(elementId);
+            if (element && !isNaN(percentage)) {
+                element.style.width = Math.min(percentage, 100) + '%';
+            }
+        }
+
+        function updateNetworkInterfaces(interfaces) {
+            const container = document.getElementById('networkInterfaces');
+            if (interfaces && interfaces.length > 0) {
+                container.innerHTML = interfaces.map(iface => `
+                    <div class="network-interface">
+                        <div class="interface-name">${iface.name} (${iface.address})</div>
+                        <div class="interface-details">
+                            <div><strong>Speed:</strong> ${iface.speed}</div>
+                            <div><strong>RX:</strong> ${iface.rx_bytes}</div>
+                            <div><strong>TX:</strong> ${iface.tx_bytes}</div>
+                            <div><strong>Errors:</strong> RX: ${iface.rx_errors}, TX: ${iface.tx_errors}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div class="metric-item">No network interfaces found</div>';
+            }
+        }
+
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = `Last updated: ${now.toLocaleString()}`;
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('dashboard').style.display = show ? 'none' : 'grid';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function refreshData() {
+            loadData();
+        }
+
+        // Cleanup interval on page unload
+        window.addEventListener('beforeunload', function() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        });
+    </script>
+</body>
+</html>
