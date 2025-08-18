@@ -191,10 +191,10 @@ async function getServerPerformanceAndStorage() {
     // Get disk space info
     const diskSpace = await checkDiskSpace(diskPath);
 
-    const totalDiskMB = diskSpace.size / (1024 * 1024);
-    const freeDiskMB = diskSpace.free / (1024 * 1024);
-    const usedDiskMB = totalDiskMB - freeDiskMB;
-    const diskUsagePercent = (usedDiskMB / totalDiskMB) * 100;
+    const totalDiskGB = diskSpace.size / (1024 * 1024 * 1024);
+    const freeDiskGB = diskSpace.free / (1024 * 1024 * 1024);
+    const usedDiskGB = totalDiskGB - freeDiskGB;
+    const diskUsagePercent = (usedDiskGB / totalDiskGB) * 100;
 
     // Fetch all metrics in parallel
     const [systemCpuUsage, processCpuUsage, networkInfo, bandwidthUsage] = await Promise.all([
@@ -216,9 +216,9 @@ async function getServerPerformanceAndStorage() {
       freeMemMB: freeMemMB.toFixed(2) + ' MB',
       usedMemMB: usedMemMB.toFixed(2) + ' MB',
       memUsagePercent: memUsagePercent.toFixed(2) + '%',
-      totalDiskMB: totalDiskMB.toFixed(2) + ' MB',
-      freeDiskMB: freeDiskMB.toFixed(2) + ' MB',
-      usedDiskMB: usedDiskMB.toFixed(2) + ' MB',
+      totalDiskGB: totalDiskGB.toFixed(2) + ' GB',
+      freeDiskGB: freeDiskGB.toFixed(2) + ' GB',
+      usedDiskGB: usedDiskGB.toFixed(2) + ' GB',
       diskUsagePercent: diskUsagePercent.toFixed(2) + '%',
       systemCpuUsage: systemCpuUsage + ' %',
       processCpuUsage: processCpuUsage + ' %',
@@ -294,9 +294,9 @@ app.get('/api/metrics/system', async (req, res) => {
         freeMemMB: metrics.freeMemMB,
         usedMemMB: metrics.usedMemMB,
         memUsagePercent: metrics.memUsagePercent,
-        totalDiskMB: metrics.totalDiskMB,
-        freeDiskMB: metrics.freeDiskMB,
-        usedDiskMB: metrics.usedDiskMB,
+        totalDiskGB: metrics.totalDiskGB,
+        freeDiskGB: metrics.freeDiskGB,
+        usedDiskGB: metrics.usedDiskGB,
         diskUsagePercent: metrics.diskUsagePercent,
         systemCpuUsage: metrics.systemCpuUsage,
         processCpuUsage: metrics.processCpuUsage
