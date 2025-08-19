@@ -46,3 +46,4 @@ class MetricsProvider extends ChangeNotifier {
     });
   }
 }
+
