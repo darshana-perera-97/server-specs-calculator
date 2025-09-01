@@ -90,12 +90,13 @@ class ApiClient {
 	ApiClient();
 
 	String get baseUrl {
-		if (kIsWeb) return 'http://localhost:3100';
+		if (kIsWeb) return 'http://69.197.187.24:3100';
+    // http://69.197.187.24/
 		// if (kIsWeb) return 'http://localhost:3100';
 		try {
 			if (Platform.isAndroid) return 'http://10.0.2.2:3100';
 		} catch (_) {}
-		return 'http://localhost:3100';
+		return 'http://69.197.187.24:3100';
 		// return 'http://localhost:3100';
 	}
 
